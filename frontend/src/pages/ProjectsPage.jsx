@@ -1,0 +1,98 @@
+import { useState } from 'react'
+import { Button } from '../components/ui/button'
+import { ProjectCard } from '../components/project/ProjectCard'
+import { ProjectModal } from '../components/project/ProjectModal'
+import { AddMemberModal } from '../components/project/AddMemberModal'
+import { EmptyState } from '../components/ui/empty-state'
+import { SkeletonCard } from '../components/ui/skeleton'
+import { ConfirmDialog } from '../components/ui/confirm-dialog'
+import { PromptDialog } from '../components/ui/prompt-dialog'
+import { useApp } from '../context/AppContext'
+import { useAuth } from '../context/AuthContext'
+import { FolderPlus } from 'lucide-react'
+
+export function ProjectsPage() {
+  const { projects, tasks, loading, createProject, addMember, updateProject, deleteProject } = useApp()
+  const { user } = useAuth()
+  const [isOpen, setIsOpen] = useState(false)
+  const [memberProjectId, setMemberProjectId] = useState(null)
+  const [renameProjectData, setRenameProjectData] = useState(null)
+  const [deleteProjectData, setDeleteProjectData] = useState(null)
+  const selectedMemberProject = projects.find((project) => project._id === memberProjectId)
+
+  return (
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">Projects</h1>
+          <p className="mt-2 text-zinc-600 dark:text-zinc-400">Manage your team workspaces and collaboration areas</p>
+        </div>
+        {user?.role === 'admin' && (
+          <Button onClick={() => setIsOpen(true)}>
+            <FolderPlus size={16} className="mr-2" />
+            New project
+          </Button>
+        )}
+      </div>
+
+      {/* Projects Grid */}
+      {loading ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      ) : projects.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {projects.map((project) => (
+            <ProjectCard
+              key={project._id}
+              project={project}
+              taskCount={tasks.filter((t) => t.projectId?._id === project._id).length}
+              onAddMember={(projectId) => setMemberProjectId(projectId)}
+              onRename={(p) => setRenameProjectData(p)}
+              onDelete={(p) => setDeleteProjectData(p)}
+              isAdmin={user?.role === 'admin'}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={FolderPlus}
+          title="No projects yet"
+          description="Create your first project to start collaborating with your team"
+          action={user?.role === 'admin' && <Button onClick={() => setIsOpen(true)}>Create project</Button>}
+        />
+      )}
+
+      <ProjectModal open={isOpen} onClose={() => setIsOpen(false)} onCreate={createProject} />
+      <AddMemberModal
+        open={Boolean(memberProjectId)}
+        onClose={() => setMemberProjectId(null)}
+        onAdd={addMember}
+        projectId={memberProjectId}
+        existingMembers={selectedMemberProject?.members || []}
+      />
+
+      <PromptDialog
+        open={Boolean(renameProjectData)}
+        title="Rename project"
+        label="Project name"
+        initialValue={renameProjectData?.name || ''}
+        placeholder="Enter project name"
+        onClose={() => setRenameProjectData(null)}
+        onSubmit={(name) => updateProject(renameProjectData._id, { name })}
+      />
+
+      <ConfirmDialog
+        open={Boolean(deleteProjectData)}
+        title="Delete project?"
+        description="This will permanently delete the project and all its tasks."
+        confirmText="Delete"
+        onClose={() => setDeleteProjectData(null)}
+        onConfirm={() => deleteProject(deleteProjectData._id)}
+      />
+    </div>
+  )
+}

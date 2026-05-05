@@ -1,0 +1,100 @@
+import { Edit2, MoreVertical, Pencil, Trash2 } from 'lucide-react'
+import { Badge } from '../ui/badge'
+import { Button } from '../ui/button'
+import { ActionMenu } from '../ui/action-menu'
+
+export function TaskCard({ task, onStatusChange, onRename, onDelete, isAdmin }) {
+  const isOverdue = new Date(task.dueDate) < new Date() && task.status !== 'done'
+  const nowTs = new Date().getTime()
+  const isNearDeadline = !isOverdue && task.status !== 'done' && (new Date(task.dueDate).getTime() - nowTs) <= 1000 * 60 * 60 * 48
+  const isDone = task.status === 'done'
+  const getStatusVariant = (status) => {
+    switch (status) {
+      case 'done':
+        return 'status-done'
+      case 'in-progress':
+        return 'status-in-progress'
+      default:
+        return 'status-todo'
+    }
+  }
+
+  const getPriorityVariant = (priority) => {
+    switch (priority) {
+      case 'high':
+        return 'danger'
+      case 'medium':
+        return 'warning'
+      case 'low':
+        return 'success'
+      default:
+        return 'default'
+    }
+  }
+
+  return (
+    <div
+      className={[
+        'group rounded-lg border bg-emerald-50/75 p-4 shadow-sm shadow-teal-900/5 backdrop-blur transition hover:shadow-md dark:bg-slate-950/45',
+        isOverdue
+          ? 'border-red-300 hover:border-red-400 dark:border-red-900/60 dark:hover:border-red-900'
+          : isNearDeadline
+          ? 'border-amber-300 hover:border-amber-400 dark:border-amber-900/60 dark:hover:border-amber-900'
+          : isDone
+          ? 'border-emerald-300 hover:border-emerald-400 dark:border-emerald-900/60 dark:hover:border-emerald-900'
+          : 'border-emerald-100 hover:border-teal-200 dark:border-teal-900/60 dark:hover:border-teal-700',
+      ].join(' ')}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-3">
+            <input type="checkbox" checked={task.status === 'done'} onChange={() => onStatusChange(task)} className="mt-1 rounded" />
+            <div className="flex-1">
+              <h3 className={`font-semibold text-ink-900 dark:text-emerald-50 ${task.status === 'done' ? 'line-through text-zinc-500 dark:text-zinc-400' : ''}`}>
+                {task.title}
+              </h3>
+              {task.description && <p className="mt-1 text-sm text-teal-800 dark:text-teal-100 line-clamp-2">{task.description}</p>}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Badge variant={getStatusVariant(task.status)}>{task.status.replace('-', ' ')}</Badge>
+                {task.priority && <Badge variant={getPriorityVariant(task.priority)}>{task.priority}</Badge>}
+                {isOverdue && <Badge variant="danger">Overdue</Badge>}
+                {isNearDeadline && <Badge variant="warning">Near deadline</Badge>}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 opacity-0 transition group-hover:opacity-100">
+          <Button variant="ghost" size="sm" onClick={() => onStatusChange(task)}>
+            <Edit2 size={16} />
+          </Button>
+          {isAdmin && (
+            <ActionMenu
+              trigger={({ setOpen, open, menuId }) => (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-haspopup="menu"
+                  aria-expanded={open}
+                  aria-controls={menuId}
+                  onClick={() => setOpen(!open)}
+                  title="Task actions"
+                >
+                  <MoreVertical size={16} />
+                </Button>
+              )}
+              items={[
+                { label: 'Rename', icon: <Pencil size={16} />, onSelect: () => onRename?.(task) },
+                { label: 'Delete', icon: <Trash2 size={16} />, destructive: true, onSelect: () => onDelete?.(task) },
+              ]}
+            />
+          )}
+        </div>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-teal-800 dark:text-teal-100">
+        {task.projectId && <span>{task.projectId.name}</span>}
+        {task.assignedTo && <span>Assigned to {task.assignedTo.name}</span>}
+        <span>Due {new Date(task.dueDate).toLocaleDateString()}</span>
+      </div>
+    </div>
+  )
+}
