@@ -270,7 +270,7 @@ This project is for assessment and educational purposes.
 
 ## 🙌 Author
 
-**Vishal Jha**
+**Vishal Sahu**
 Final Year IT Student | Full Stack Developer
 
 ---
