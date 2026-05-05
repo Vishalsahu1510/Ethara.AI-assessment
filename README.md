@@ -7,8 +7,8 @@ This app enables teams to collaborate efficiently by managing projects, assignin
 
 ## ✨ Live Demo
 
-🔗 **Live App:** *[Add your deployed URL here]*
-📂 **GitHub Repository:** *[Add repo link here]*
+🔗 **Live App:** *https://ethara-ai-assessment-sage.vercel.app/login*
+📂 **GitHub Repository:** *https://github.com/Vishalsahu1510/Ethara.AI-assessment*
 
 ---
 

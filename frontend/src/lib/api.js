@@ -3,7 +3,6 @@ import axios from 'axios'
 const resolveBaseUrl = () => {
   const raw = import.meta.env.VITE_API_URL
   const fallback = 'https://ethara-ai-assessment-lovat.vercel.app/api'
-  if (!raw) return fallback
   const trimmed = String(raw).replace(/\/+$/, '')
   if (trimmed.endsWith('/api')) return trimmed
   return `${trimmed}/api`
